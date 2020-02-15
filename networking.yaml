@@ -53,11 +53,11 @@ Resources:
         - Key: Name
           Value: !Sub ${EnvironmentName} InternetGateway
 
-  # InternetGatewayAttachment:
-  #   Type: AWS::EC2::VPCGatewayAttachment
-  #   Properties:
-  #     VpcId: !Ref VPC
-  #     InternetGatewayId: !Ref InternetGateway
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
       
   PublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -99,6 +99,7 @@ Resources:
           Value: !Sub ${EnvironmentName} Public Subnet (AZ3)
 
   PublicRouteTable:
+    DependsOn: InternetGatewayAttachment
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
