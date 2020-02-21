@@ -181,6 +181,10 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
       LifecycleConfiguration:
         Rules:
         - Id: LifeCycleRule
@@ -190,3 +194,39 @@ Resources:
           Transitions:
             - TransitionInDays: '30'
               StorageClass: STANDARD_IA 
+
+  EC2Role:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      RoleName: EC2-CSYE6225
+      
+  IAMPolicy:
+    Type: 'AWS::IAM::Policy'
+    DependsOn: 
+    - S3Bucket
+    - EC2Role
+    Properties:
+      PolicyName: WebAppS3
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: s3:*
+            Resource:
+              - arn:aws:s3:::S3BucketName
+              - arn:aws:s3:::S3BucketName/*
+      Roles: 
+        - !Ref EC2Role
+
+Outputs:
+  S3BucketName:
+    Value: !Ref S3Bucket
