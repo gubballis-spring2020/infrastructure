@@ -23,6 +23,30 @@
   {
     "ParameterKey": "DBInstanceClass",
     "ParameterValue": "db.t3.micro"
+  }, 
+  {
+    "ParameterKey": "PubliclyAccessibleRDS",
+    "ParameterValue": "false"
+  }, 
+  {
+    "ParameterKey": "EC2InstanceType",
+    "ParameterValue": "t2.micro"
+  }, 
+  {
+    "ParameterKey": "EC2VolumeSize",
+    "ParameterValue": "20"
+  },
+  {
+    "ParameterKey": "EC2VolumeType",
+    "ParameterValue": "gp2"
+  },
+  {
+    "ParameterKey": "DBPassword",
+    "ParameterValue": "Dracarys+2020"
+  },
+  {
+    "ParameterKey": "EC2KeyName",
+    "ParameterValue": "csye6225"
   }
 
 ]

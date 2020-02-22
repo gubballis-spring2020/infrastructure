@@ -44,6 +44,33 @@ Parameters:
     Description: Please enter the password for the database
     Type: String
 
+  PubliclyAccessibleRDS:
+    Description: Please enter the public accessible value for RDS
+    Type: String
+    Default: "false"
+
+  EC2InstanceType:
+    Description: Please enter the instance type for EC2
+    Type: String
+    Default: "t1.micro"
+
+  EC2VolumeSize:
+    Description: Please enter the volume size for EC2
+    Type: String
+    Default: "10"
+
+  EC2VolumeType:
+    Description: Please enter the volume type for EC2
+    Type: String
+    Default: "io1"
+
+  EC2KeyName:
+    Description: Please enter the key-pair name for EC2
+    Type: String
+    Default: "csye6225"
+
+  
+
 
 Resources:
   VPC:
@@ -231,8 +258,8 @@ Resources:
           - Effect: Allow
             Action: s3:*
             Resource:
-              - arn:aws:s3:::S3BucketName
-              - arn:aws:s3:::S3BucketName/*
+              - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket]]
+              - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket, '/*']]
       Roles: 
         - !Ref EC2Role
 
@@ -252,12 +279,12 @@ Resources:
 
   MySQLDB:
     Type: AWS::RDS::DBInstance
+    DependsOn: RDSSecurityGroup
     Properties:
       DBInstanceIdentifier: csye6225-spring2020
       DBName: csye6225
-      PubliclyAccessible: false
+      PubliclyAccessible: !Ref PubliclyAccessibleRDS
       DBInstanceClass: !Ref DBInstanceClass
-      DBSecurityGroups: !Ref RDSSecurityGroup
       AllocatedStorage: 10
       MultiAZ: false
       Engine: MySQL
@@ -266,6 +293,31 @@ Resources:
       MasterUserPassword: !Ref DBPassword
       DBSubnetGroupName: !Ref DBSubnetGroup
 
-Outputs:
-  S3BucketName:
-    Value: !Ref S3Bucket
+  EC2RoleAttach:
+    Type: AWS::IAM::InstanceProfile
+    DependsOn: EC2Role
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref EC2Role
+  
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    DependsOn:
+    - PublicSubnet3
+    - EC2RoleAttach
+    Properties: 
+      ImageId: "ami-067b9f0c41ebea56d"
+      KeyName: !Ref EC2KeyName
+      InstanceType: !Ref EC2InstanceType
+      BlockDeviceMappings: 
+      - DeviceName: "/dev/sdm"
+        Ebs: 
+          VolumeType: !Ref EC2VolumeType
+          DeleteOnTermination: "true"
+          VolumeSize: !Ref EC2VolumeSize
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          SubnetId: !Ref PublicSubnet3
+      IamInstanceProfile: !Ref EC2RoleAttach
