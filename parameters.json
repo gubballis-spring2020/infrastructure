@@ -19,6 +19,10 @@
   {
     "ParameterKey": "PublicSubnet3CIDR",
     "ParameterValue": "192.168.102.32/28"
+  }, 
+  {
+    "ParameterKey": "DBInstanceClass",
+    "ParameterValue": "db.t3.micro"
   }
 
 ]
