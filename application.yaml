@@ -168,7 +168,7 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  EC2SecurityGroup:
+  ApplicationSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow http to client host
@@ -198,7 +198,7 @@ Resources:
 
   RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
-    DependsOn: EC2SecurityGroup
+    DependsOn: ApplicationSecurityGroup
     Properties:
       GroupDescription: Group for RDS
       GroupName: database
@@ -207,7 +207,7 @@ Resources:
       - IpProtocol: tcp
         FromPort: 3306
         ToPort: 3306
-        SourceSecurityGroupId: !Ref EC2SecurityGroup
+        SourceSecurityGroupId: !Ref ApplicationSecurityGroup
       Tags:
         - Key: Name
           Value: database
@@ -256,7 +256,11 @@ Resources:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
-            Action: s3:*
+            Action: 
+              - s3:DeleteObject
+              - s3:GetObject
+              - s3:ListMultipartUploadParts
+              - s3:PutObject
             Resource:
               - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket]]
               - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket, '/*']]
@@ -275,7 +279,7 @@ Resources:
         - !Ref PublicSubnet2
       Tags: 
         - Key: Name
-          Value: DBSubnetGroup
+          Value: DBSubnetGroup     
 
   MySQLDB:
     Type: AWS::RDS::DBInstance
@@ -292,6 +296,8 @@ Resources:
       MasterUsername: dbuser
       MasterUserPassword: !Ref DBPassword
       DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
 
   EC2RoleAttach:
     Type: AWS::IAM::InstanceProfile
@@ -306,6 +312,8 @@ Resources:
     DependsOn:
     - PublicSubnet3
     - EC2RoleAttach
+    - ApplicationSecurityGroup
+    - MySQLDB
     Properties: 
       ImageId: "ami-067b9f0c41ebea56d"
       KeyName: !Ref EC2KeyName
@@ -320,4 +328,6 @@ Resources:
         - AssociatePublicIpAddress: "true"
           DeviceIndex: "0"
           SubnetId: !Ref PublicSubnet3
+          GroupSet:
+            - !Ref ApplicationSecurityGroup
       IamInstanceProfile: !Ref EC2RoleAttach
