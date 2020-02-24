@@ -261,10 +261,10 @@ Resources:
         Statement:
           - Effect: Allow
             Action: 
-              - s3:DeleteObject
-              - s3:GetObject
-              - s3:ListMultipartUploadParts
-              - s3:PutObject
+              - s3:Delete*
+              - s3:Get*
+              - s3:List*
+              - s3:Put*
             Resource:
               - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket]]
               - !Join ['', ['arn:aws:s3:::', !Ref S3Bucket, '/*']]
@@ -342,17 +342,21 @@ Resources:
             - - "#!/bin/bash\n"
               - "cd /home/ubuntu\n"
               - "touch .env\n"
-              - "echo 'DB_HOST = \""
+              - "echo $'DB_HOST = \""
               - !GetAtt MySQLDB.Endpoint.Address
-              - "\"' >> .env"
-              - "echo 'DB_USER = \"dbuser\" ' >> .env"
-              - "echo 'DB_PASSWORD = \""
+              - "\"\n' >> .env"
+              - "echo $'DB_USER = \"dbuser\"\n' >> .env"
+              - "echo $'DB_PASSWORD = \""
               - !Sub ${DBPassword}
-              - "\"' >> .env"
-              - "echo 'DB_NAME = \"csye6225\" '>> .env"
-              - "echo 'DB_PORT = \""
+              - "\"\n' >> .env"
+              - "echo $'DB_NAME = \"csye6225\"\n'>> .env"
+              - "echo $'DB_PORT = \""
               - !GetAtt MySQLDB.Endpoint.Port
-              - "\"' >> .env"
+              - "\"\n' >> .env"
+              - "echo $'S3_BUCKET = \""
+              - !Ref S3Bucket
+              - "\"\n' >> .env"
+              - "echo $'AWS_PROFILE = \"aws-dev\"\n'>> .env"
 
 Outputs:
   MySQLEndpoint:
