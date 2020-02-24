@@ -69,6 +69,10 @@ Parameters:
     Type: String
     Default: "csye6225"
 
+  EC2ImageID:
+    Description: Please enter the ami image ID for EC2
+    Type: String
+    Default: "ami-067b9f0c41ebea56d"
   
 
 
@@ -315,7 +319,7 @@ Resources:
     - ApplicationSecurityGroup
     - MySQLDB
     Properties: 
-      ImageId: "ami-067b9f0c41ebea56d"
+      ImageId: !Ref EC2ImageID
       KeyName: !Ref EC2KeyName
       InstanceType: !Ref EC2InstanceType
       BlockDeviceMappings: 
@@ -331,3 +335,25 @@ Resources:
           GroupSet:
             - !Ref ApplicationSecurityGroup
       IamInstanceProfile: !Ref EC2RoleAttach
+      UserData:
+        Fn::Base64: 
+          Fn::Join: 
+            - ""
+            - - "#!/bin/bash\n"
+              - "cd /home/ubuntu\n"
+              - "touch .env\n"
+              - "echo 'DB_HOST = \""
+              - !GetAtt MySQLDB.Endpoint.Address
+              - "\"' >> .env"
+              - "echo 'DB_USER = \"dbuser\" ' >> .env"
+              - "echo 'DB_PASSWORD = \""
+              - !Sub ${DBPassword}
+              - "\"' >> .env"
+              - "echo 'DB_NAME = \"csye6225\" '>> .env"
+              - "echo 'DB_PORT = \""
+              - !GetAtt MySQLDB.Endpoint.Port
+              - "\"' >> .env"
+
+Outputs:
+  MySQLEndpoint:
+    Value: !GetAtt MySQLDB.Endpoint.Address
