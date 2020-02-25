@@ -19,6 +19,38 @@
   {
     "ParameterKey": "PublicSubnet3CIDR",
     "ParameterValue": "192.168.102.32/28"
+  }, 
+  {
+    "ParameterKey": "DBInstanceClass",
+    "ParameterValue": "db.t3.micro"
+  }, 
+  {
+    "ParameterKey": "PubliclyAccessibleRDS",
+    "ParameterValue": "false"
+  }, 
+  {
+    "ParameterKey": "EC2InstanceType",
+    "ParameterValue": "t2.micro"
+  }, 
+  {
+    "ParameterKey": "EC2VolumeSize",
+    "ParameterValue": "20"
+  },
+  {
+    "ParameterKey": "EC2VolumeType",
+    "ParameterValue": "gp2"
+  },
+  {
+    "ParameterKey": "DBPassword",
+    "ParameterValue": "Dracarys+2020"
+  },
+  {
+    "ParameterKey": "EC2KeyName",
+    "ParameterValue": "csye6225"
+  },
+  {
+    "ParameterKey": "EC2ImageID",
+    "ParameterValue": "ami-067b9f0c41ebea56d"
   }
 
 ]
