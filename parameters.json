@@ -41,6 +41,14 @@
     "ParameterValue": "gp2"
   },
   {
+    "ParameterKey": "DBName",
+    "ParameterValue": "csye6225"
+  },
+  {
+    "ParameterKey": "DBUser",
+    "ParameterValue": "root"
+  },
+  {
     "ParameterKey": "DBPassword",
     "ParameterValue": "Dracarys+2020"
   },
@@ -50,7 +58,7 @@
   },
   {
     "ParameterKey": "EC2ImageID",
-    "ParameterValue": "ami-067b9f0c41ebea56d"
+    "ParameterValue": "ami-02ec98cee22e9d29d"
   }
 
 ]

@@ -40,6 +40,14 @@ Parameters:
     Type: String
     Default: db.t3.micro
 
+  DBName: 
+    Description: Please enter the database name for the instance
+    Type: String
+  
+  DBUser: 
+    Description: Please enter the password for the database
+    Type: String
+
   DBPassword: 
     Description: Please enter the password for the database
     Type: String
@@ -290,14 +298,14 @@ Resources:
     DependsOn: RDSSecurityGroup
     Properties:
       DBInstanceIdentifier: csye6225-spring2020
-      DBName: csye6225
+      DBName: !Ref DBName
       PubliclyAccessible: !Ref PubliclyAccessibleRDS
       DBInstanceClass: !Ref DBInstanceClass
       AllocatedStorage: 10
       MultiAZ: false
       Engine: MySQL
       EngineVersion: 5.6
-      MasterUsername: dbuser
+      MasterUsername: !Ref DBUser
       MasterUserPassword: !Ref DBPassword
       DBSubnetGroupName: !Ref DBSubnetGroup
       VPCSecurityGroups:
@@ -345,16 +353,23 @@ Resources:
               - "echo $'DB_HOST = \""
               - !GetAtt MySQLDB.Endpoint.Address
               - "\"\n' >> .env"
-              - "echo $'DB_USER = \"dbuser\"\n' >> .env"
+              - "echo $'DB_USER = \""
+              - !Sub ${DBUser}
+              - "\"\n' >> .env"
               - "echo $'DB_PASSWORD = \""
               - !Sub ${DBPassword}
               - "\"\n' >> .env"
-              - "echo $'DB_NAME = \"csye6225\"\n'>> .env"
+              - "echo $'DB_NAME = \""
+              - !Sub ${DBName}
+              - "\"\n' >> .env"
               - "echo $'DB_PORT = \""
               - !GetAtt MySQLDB.Endpoint.Port
               - "\"\n' >> .env"
               - "echo $'S3_BUCKET = \""
               - !Ref S3Bucket
+              - "\"\n' >> .env"
+              - "echo $'S3_BUCKET_URL = \""
+              - !GetAtt S3Bucket.WebsiteURL
               - "\"\n' >> .env"
               - "echo $'AWS_PROFILE = \"aws-dev\"\n'>> .env"
 
