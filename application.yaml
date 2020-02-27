@@ -306,7 +306,7 @@ Resources:
       DBName: !Ref DBName
       PubliclyAccessible: !Ref PubliclyAccessibleRDS
       DBInstanceClass: !Ref DBInstanceClass
-      AllocatedStorage: 10
+      AllocatedStorage: 20
       MultiAZ: false
       Engine: MySQL
       EngineVersion: 5.6
