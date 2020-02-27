@@ -233,6 +233,11 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
       LifecycleConfiguration:
         Rules:
         - Id: LifeCycleRule
@@ -372,6 +377,7 @@ Resources:
               - !GetAtt S3Bucket.WebsiteURL
               - "\"\n' >> .env"
               - "echo $'AWS_PROFILE = \"aws-dev\"\n'>> .env"
+              - "echo $'AWS_DEFAULT_ACL= = \"private\"\n'>> .env"
 
 Outputs:
   MySQLEndpoint:
