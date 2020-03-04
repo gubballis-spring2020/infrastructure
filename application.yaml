@@ -393,6 +393,22 @@ Resources:
               - 'sts:AssumeRole'
       RoleName: CodeDeployEC2ServiceRole
 
+  CodeDeployServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codedeploy.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
+      RoleName: CodeDeployServiceRole
+
   CodeDeployIAMPolicy:
     Type: AWS::IAM::Policy
     DependsOn: CodeDeployEC2Role
