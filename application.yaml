@@ -378,6 +378,9 @@ Resources:
               - "\"\n' >> .env"
               - "echo $'AWS_PROFILE = \"aws-dev\"\n'>> .env"
               - "echo $'AWS_DEFAULT_ACL= = \"private\"\n'>> .env"
+      Tags: 
+        - Key: Name
+          Value: Srikanth-webapp 
 
   CodeDeployEC2Role:
     Type: AWS::IAM::Role
@@ -392,22 +395,6 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       RoleName: CodeDeployEC2ServiceRole
-
-  CodeDeployServiceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - codedeploy.amazonaws.com
-            Action:
-              - 'sts:AssumeRole'
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSCodeDeployRole
-      RoleName: CodeDeployServiceRole
 
   CodeDeployIAMPolicy:
     Type: AWS::IAM::Policy
@@ -474,3 +461,28 @@ Resources:
               - arn:aws:codedeploy:us-east-1:823301983257:deploymentconfig:CodeDeployDefault.AllAtOnce
       Users: 
         - circleci
+
+  CodeDeployApplication:
+    Type: AWS::CodeDeploy::Application
+    Properties:
+      ApplicationName: csye6225-webapp
+      ComputePlatform: Server
+
+  CodeDeploymentGroup: 
+    Type: AWS::CodeDeploy::DeploymentGroup
+    Properties: 
+      ApplicationName: !Ref CodeDeployApplication
+      DeploymentGroupName: csye6225-webapp-deployment
+      DeploymentStyle:
+        DeploymentType: IN_PLACE
+        DeploymentOption: WITHOUT_TRAFFIC_CONTROL
+      Ec2TagFilters:
+        - Key: Name
+          Type: KEY_AND_VALUE
+          Value: Srikanth-webapp
+      DeploymentConfigName: CodeDeployDefault.AllAtOnce
+      AutoRollbackConfiguration:
+        Enabled: true
+        Events: 
+          - DEPLOYMENT_FAILURE
+      ServiceRoleArn: arn:aws:iam::823301983257:role/CodeDeployServiceRole
