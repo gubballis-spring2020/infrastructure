@@ -414,7 +414,7 @@ Resources:
 
   CodeDeployIAMPolicy:
     Type: AWS::IAM::Policy
-    DependsOn: CodeDeployEC2Role
+    DependsOn: EC2Role
     Properties:
       PolicyName: CodeDeploy-EC2-S3
       PolicyDocument:
@@ -462,7 +462,7 @@ Resources:
               - codedeploy:RegisterApplicationRevision
               - codedeploy:GetApplicationRevision
             Resource:
-              - arn:aws:codedeploy:us-east-1:823301983257:application:try
+              - arn:aws:codedeploy:us-east-1:823301983257:application:csye6225-webapp
           - Effect: Allow
             Action: 
               - codedeploy:CreateDeployment
