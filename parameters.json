@@ -58,7 +58,7 @@
   },
   {
     "ParameterKey": "EC2ImageID",
-    "ParameterValue": "ami-09f4c61231cc4a5e2"
+    "ParameterValue": "ami-043c9ef4807f0a080"
   }
 
 ]
