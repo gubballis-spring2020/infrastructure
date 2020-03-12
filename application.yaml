@@ -477,8 +477,8 @@ Resources:
               - s3:Get*
               - s3:List*
             Resource:
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me/*
+              - arn:aws:s3:::codedeploy.prod.srikanthreddygubballi.me
+              - arn:aws:s3:::codedeploy.prod.srikanthreddygubballi.me/*
       Users: 
         - circleci
       Roles:
@@ -497,8 +497,8 @@ Resources:
               - s3:List*
               - s3:PutObject
             Resource:
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me/*
+              - arn:aws:s3:::codedeploy.prod.srikanthreddygubballi.me
+              - arn:aws:s3:::codedeploy.prod.srikanthreddygubballi.me/*
       Users: 
         - circleci
 
@@ -514,7 +514,7 @@ Resources:
               - codedeploy:RegisterApplicationRevision
               - codedeploy:GetApplicationRevision
             Resource:
-              - arn:aws:codedeploy:us-east-1:823301983257:application:csye6225-webapp
+              - arn:aws:codedeploy:us-east-1:748596750012:application:csye6225-webapp
           - Effect: Allow
             Action: 
               - codedeploy:CreateDeployment
@@ -524,9 +524,9 @@ Resources:
             Action: 
               - codedeploy:GetDeploymentConfig
             Resource:
-              - arn:aws:codedeploy:us-east-1:823301983257:deploymentconfig:CodeDeployDefault.OneAtATime
-              - arn:aws:codedeploy:us-east-1:823301983257:deploymentconfig:CodeDeployDefault.HalfAtATime
-              - arn:aws:codedeploy:us-east-1:823301983257:deploymentconfig:CodeDeployDefault.AllAtOnce
+              - arn:aws:codedeploy:us-east-1:748596750012:deploymentconfig:CodeDeployDefault.OneAtATime
+              - arn:aws:codedeploy:us-east-1:748596750012:deploymentconfig:CodeDeployDefault.HalfAtATime
+              - arn:aws:codedeploy:us-east-1:748596750012:deploymentconfig:CodeDeployDefault.AllAtOnce
       Users: 
         - circleci
 
@@ -538,7 +538,9 @@ Resources:
 
   CodeDeploymentGroup: 
     Type: AWS::CodeDeploy::DeploymentGroup
-    DependsOn: CodeDeployServiceRole
+    DependsOn: 
+      - CodeDeployServiceRole
+      - MyEC2Instance
     Properties: 
       ApplicationName: !Ref CodeDeployApplication
       DeploymentGroupName: csye6225-webapp-deployment
