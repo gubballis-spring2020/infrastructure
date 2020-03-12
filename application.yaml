@@ -82,6 +82,15 @@ Parameters:
     Type: String
     Default: "ami-067b9f0c41ebea56d"
   
+  CodeDeployRegion:
+    Description: Please enter the region for code deploy
+    Type: String
+    Default: "us-east-1"
+
+  AccountID:
+    Description: Please enter the account ID for permissions attach
+    Type: String
+    Default: "748596750012"
 
 
 Resources:
@@ -514,7 +523,7 @@ Resources:
               - codedeploy:RegisterApplicationRevision
               - codedeploy:GetApplicationRevision
             Resource:
-              - arn:aws:codedeploy:us-east-1:748596750012:application:csye6225-webapp
+              - !Sub 'arn:aws:codedeploy:${CodeDeployRegion}:${AccountID}:application:csye6225-webapp'
           - Effect: Allow
             Action: 
               - codedeploy:CreateDeployment
@@ -524,9 +533,9 @@ Resources:
             Action: 
               - codedeploy:GetDeploymentConfig
             Resource:
-              - arn:aws:codedeploy:us-east-1:748596750012:deploymentconfig:CodeDeployDefault.OneAtATime
-              - arn:aws:codedeploy:us-east-1:748596750012:deploymentconfig:CodeDeployDefault.HalfAtATime
-              - arn:aws:codedeploy:us-east-1:748596750012:deploymentconfig:CodeDeployDefault.AllAtOnce
+              - !Sub 'arn:aws:codedeploy:${CodeDeployRegion}:${AccountID}:deploymentconfig:CodeDeployDefault.OneAtATime'
+              - !Sub 'arn:aws:codedeploy:${CodeDeployRegion}:${AccountID}:deploymentconfig:CodeDeployDefault.HalfAtATime'
+              - !Sub 'arn:aws:codedeploy:${CodeDeployRegion}:${AccountID}:deploymentconfig:CodeDeployDefault.AllAtOnce'
       Users: 
         - circleci
 
