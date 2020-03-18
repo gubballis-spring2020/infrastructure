@@ -270,8 +270,8 @@ Resources:
             Action:
               - 'sts:AssumeRole'
       ManagedPolicyArns:
-        - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
-        - 'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy'
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - arn:aws:iam::aws:policy/CloudWatchAgentAdminPolicy
       RoleName: EC2-CSYE6225
       
   EC2IAMPolicy:
@@ -489,8 +489,8 @@ Resources:
               - s3:Get*
               - s3:List*
             Resource:
-              - arn:aws:s3:::codedeploy.prod.srikanthreddygubballi.me
-              - arn:aws:s3:::codedeploy.prod.srikanthreddygubballi.me/*
+              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me
+              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me/*
       Users: 
         - circleci
       Roles:
@@ -509,8 +509,8 @@ Resources:
               - s3:List*
               - s3:PutObject
             Resource:
-              - arn:aws:s3:::codedeploy.prod.srikanthreddygubballi.me
-              - arn:aws:s3:::codedeploy.prod.srikanthreddygubballi.me/*
+              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me
+              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me/*
       Users: 
         - circleci
 
