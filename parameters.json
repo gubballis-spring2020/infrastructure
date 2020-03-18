@@ -58,7 +58,7 @@
   },
   {
     "ParameterKey": "EC2ImageID",
-    "ParameterValue": "ami-0bb2ce4aad32fb005"
+    "ParameterValue": "ami-0b65659503d65e6ee"
   },
   {
     "ParameterKey": "CodeDeployRegion",
@@ -66,7 +66,7 @@
   },
   {
     "ParameterKey": "AccountID",
-    "ParameterValue": "748596750012"
+    "ParameterValue": "823301983257"
   }
 
 ]
