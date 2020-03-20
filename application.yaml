@@ -416,12 +416,64 @@ Resources:
       MinSize: !Ref MinSize
       MaxSize: !Ref MaxSize
       DesiredCapacity: !Ref DesiredCapacity
-      Cooldown: 60
+      Cooldown: "60"
       Tags:
         - Key: Name
           Value: Srikanth-webapp
           PropagateAtLaunch: "true"
 
+  WebServerScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref EC2AutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: '1'
+  
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Scale-up if CPU > 90% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      EvaluationPeriods: '2'
+      Statistic: Average
+      Threshold: '90'
+      Period: '300'
+      AlarmActions:
+        - Ref: WebServerScaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value:
+            Ref: EC2AutoScalingGroup
+      ComparisonOperator: GreaterThanThreshold
+
+  WebServerScaleDownPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref EC2AutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: '-1'
+  
+  CPUAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      EvaluationPeriods: '2'
+      Statistic: Average
+      Threshold: '70'
+      Period: '300'
+      AlarmActions:
+        - Ref: WebServerScaleDownPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value:
+            Ref: EC2AutoScalingGroup
+      ComparisonOperator: LessThanThreshold
+    
   CodeDeployEC2Role:
     Type: AWS::IAM::Role
     Properties:
