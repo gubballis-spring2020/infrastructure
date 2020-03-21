@@ -526,7 +526,7 @@ Resources:
       Name: LoadBalancerTargetGroup
       HealthCheckPath: /
       Matcher:
-        HttpCode: "200,201,400,404,401"
+        HttpCode: "200,302,401,400"
       HealthCheckIntervalSeconds: 60
       HealthCheckTimeoutSeconds: 59
       HealthyThresholdCount: 3
@@ -534,6 +534,19 @@ Resources:
       Protocol: HTTP
       UnhealthyThresholdCount: 5
       VpcId: !Ref VPC
+
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+    - LoadBalancerTargetGroup
+    - WebAppLoadBalancer
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref LoadBalancerTargetGroup
+      LoadBalancerArn: !Ref WebAppLoadBalancer
+      Port: 80
+      Protocol: HTTP
 
   CodeDeployEC2Role:
     Type: AWS::IAM::Role
