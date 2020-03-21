@@ -408,6 +408,9 @@ Resources:
 
   EC2AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: 
+    - LoadBalancerTargetGroup
+    - EC2AutoScaleLaunchConfig
     Properties: 
       VPCZoneIdentifier:
         - !Ref PublicSubnet1
@@ -417,6 +420,8 @@ Resources:
       MaxSize: !Ref MaxSize
       DesiredCapacity: !Ref DesiredCapacity
       Cooldown: "60"
+      TargetGroupARNs: 
+        - !Ref LoadBalancerTargetGroup
       Tags:
         - Key: Name
           Value: Srikanth-webapp
@@ -501,6 +506,7 @@ Resources:
   
   WebAppLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    DependsOn: LoadBalancerSecurityGroup
     Properties: 
       LoadBalancerAttributes: 
         - Key: idle_timeout.timeout_seconds
@@ -512,6 +518,22 @@ Resources:
       Subnets: 
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
+
+  LoadBalancerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: WebAppLoadBalancer
+    Properties:
+      Name: LoadBalancerTargetGroup
+      HealthCheckPath: /
+      Matcher:
+        HttpCode: "200,201,400,404,401"
+      HealthCheckIntervalSeconds: 60
+      HealthCheckTimeoutSeconds: 59
+      HealthyThresholdCount: 3
+      Port: 3000
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VPC
 
   CodeDeployEC2Role:
     Type: AWS::IAM::Role
