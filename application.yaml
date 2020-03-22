@@ -112,6 +112,11 @@ Parameters:
     Type: String
     Default: "2"
 
+  DomainName:
+    Description: Please enter the domain name for DNS
+    Type: String
+    Default: "dev.srikanthreddygubballi.me"
+
 Resources:
   VPC:
     Type: AWS::EC2::VPC
@@ -438,12 +443,12 @@ Resources:
   CPUAlarmHigh:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Scale-up if CPU > 90% for 10 minutes
+      AlarmDescription: Scale-up if CPU > 5% for 10 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       EvaluationPeriods: '2'
       Statistic: Average
-      Threshold: '90'
+      Threshold: '5'
       Period: '300'
       AlarmActions:
         - Ref: WebServerScaleUpPolicy
@@ -464,12 +469,12 @@ Resources:
   CPUAlarmLow:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Scale-down if CPU < 70% for 10 minutes
+      AlarmDescription: Scale-down if CPU < 3% for 10 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       EvaluationPeriods: '2'
       Statistic: Average
-      Threshold: '70'
+      Threshold: '3'
       Period: '300'
       AlarmActions:
         - Ref: WebServerScaleDownPolicy
@@ -526,7 +531,7 @@ Resources:
       Name: LoadBalancerTargetGroup
       HealthCheckPath: /
       Matcher:
-        HttpCode: "200,302,401,400"
+        HttpCode: "200,302,401,404,400"
       HealthCheckIntervalSeconds: 60
       HealthCheckTimeoutSeconds: 59
       HealthyThresholdCount: 3
@@ -708,6 +713,7 @@ Resources:
       - CodeDeployApplication
       - CodeDeployServiceRole
       - EC2AutoScalingGroup
+      - LoadBalancerTargetGroup
     Properties: 
       ApplicationName: !Ref CodeDeployApplication
       DeploymentGroupName: csye6225-webapp-deployment
@@ -723,5 +729,20 @@ Resources:
         Enabled: true
         Events: 
           - DEPLOYMENT_FAILURE
+      LoadBalancerInfo:
+        TargetGroupInfoList:
+          - Name: !GetAtt LoadBalancerTargetGroup.TargetGroupName
       ServiceRoleArn: 
         Fn::GetAtt: [ CodeDeployServiceRole, Arn ]
+
+  DNSRecordSet:
+    Type: AWS::Route53::RecordSet
+    DependsOn: WebAppLoadBalancer
+    Properties:
+      AliasTarget:
+        DNSName: !GetAtt WebAppLoadBalancer.DNSName
+        HostedZoneId: !GetAtt WebAppLoadBalancer.CanonicalHostedZoneID
+        EvaluateTargetHealth: true
+      Name: !Join ['', [!Ref DomainName, "."]]
+      HostedZoneName: !Join ['', [!Ref DomainName, "."]]
+      Type: A

@@ -74,7 +74,7 @@
   },
   {
     "ParameterKey": "MinSize",
-    "ParameterValue": "1"
+    "ParameterValue": "2"
   },
   {
     "ParameterKey": "MaxSize",
@@ -82,7 +82,11 @@
   },
   {
     "ParameterKey": "DesiredCapacity",
-    "ParameterValue": "1"
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "DomainName",
+    "ParameterValue": "dev.srikanthreddygubballi.me"
   }
 
 ]
