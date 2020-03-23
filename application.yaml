@@ -717,6 +717,8 @@ Resources:
     Properties: 
       ApplicationName: !Ref CodeDeployApplication
       DeploymentGroupName: csye6225-webapp-deployment
+      AutoScalingGroups: 
+        - !Ref EC2AutoScalingGroup
       DeploymentStyle:
         DeploymentType: IN_PLACE
         DeploymentOption: WITHOUT_TRAFFIC_CONTROL

@@ -78,7 +78,7 @@
   },
   {
     "ParameterKey": "MaxSize",
-    "ParameterValue": "3"
+    "ParameterValue": "5"
   },
   {
     "ParameterKey": "DesiredCapacity",
