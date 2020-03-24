@@ -67,6 +67,26 @@
   {
     "ParameterKey": "AccountID",
     "ParameterValue": "823301983257"
+  },
+  {
+    "ParameterKey": "AsgLaunchConfig",
+    "ParameterValue": "asg_launch_config"
+  },
+  {
+    "ParameterKey": "MinSize",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "MaxSize",
+    "ParameterValue": "5"
+  },
+  {
+    "ParameterKey": "DesiredCapacity",
+    "ParameterValue": "2"
+  },
+  {
+    "ParameterKey": "DomainName",
+    "ParameterValue": "dev.srikanthreddygubballi.me"
   }
 
 ]

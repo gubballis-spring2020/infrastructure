@@ -92,6 +92,30 @@ Parameters:
     Type: String
     Default: "748596750012"
 
+  AsgLaunchConfig:
+    Description: Please enter the name for auto-scaling config
+    Type: String
+    Default: "asg_launch_config"
+  
+  MinSize:
+    Description: Please enter the minimum size for auto scaling group
+    Type: String
+    Default: "2"
+
+  MaxSize:
+    Description: Please enter the maximum size for auto scaling group
+    Type: String
+    Default: "5"
+
+  DesiredCapacity:
+    Description: Please enter the desired capacity for auto scaling group
+    Type: String
+    Default: "2"
+
+  DomainName:
+    Description: Please enter the domain name for DNS
+    Type: String
+    Default: "dev.srikanthreddygubballi.me"
 
 Resources:
   VPC:
@@ -336,14 +360,14 @@ Resources:
       Roles:
         - !Ref EC2Role
   
-  MyEC2Instance:
-    Type: AWS::EC2::Instance
+  EC2AutoScaleLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
     DependsOn:
-    - PublicSubnet3
     - EC2RoleAttach
     - ApplicationSecurityGroup
     - MySQLDB
     Properties: 
+      LaunchConfigurationName: !Ref AsgLaunchConfig
       ImageId: !Ref EC2ImageID
       KeyName: !Ref EC2KeyName
       InstanceType: !Ref EC2InstanceType
@@ -353,12 +377,8 @@ Resources:
           VolumeType: !Ref EC2VolumeType
           DeleteOnTermination: "true"
           VolumeSize: !Ref EC2VolumeSize
-      NetworkInterfaces: 
-        - AssociatePublicIpAddress: "true"
-          DeviceIndex: "0"
-          SubnetId: !Ref PublicSubnet3
-          GroupSet:
-            - !Ref ApplicationSecurityGroup
+      SecurityGroups:
+        - !Ref ApplicationSecurityGroup
       IamInstanceProfile: !Ref EC2RoleAttach
       UserData:
         Fn::Base64: 
@@ -390,9 +410,148 @@ Resources:
               - "\"\n' >> .env"
               - "echo $'AWS_PROFILE = \"aws-dev\"\n'>> .env"
               - "echo $'AWS_DEFAULT_ACL= = \"private\"\n'>> .env"
-      Tags: 
+
+  EC2AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: 
+    - LoadBalancerTargetGroup
+    - EC2AutoScaleLaunchConfig
+    Properties: 
+      VPCZoneIdentifier:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      LaunchConfigurationName: !Ref EC2AutoScaleLaunchConfig
+      MinSize: !Ref MinSize
+      MaxSize: !Ref MaxSize
+      DesiredCapacity: !Ref DesiredCapacity
+      Cooldown: "60"
+      TargetGroupARNs: 
+        - !Ref LoadBalancerTargetGroup
+      Tags:
         - Key: Name
-          Value: Srikanth-webapp 
+          Value: Srikanth-webapp
+          PropagateAtLaunch: "true"
+
+  WebServerScaleUpPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref EC2AutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: '1'
+  
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Scale-up if CPU > 5% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      EvaluationPeriods: '2'
+      Statistic: Average
+      Threshold: '5'
+      Period: '300'
+      AlarmActions:
+        - Ref: WebServerScaleUpPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value:
+            Ref: EC2AutoScalingGroup
+      ComparisonOperator: GreaterThanThreshold
+
+  WebServerScaleDownPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref EC2AutoScalingGroup
+      Cooldown: '60'
+      ScalingAdjustment: '-1'
+  
+  CPUAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmDescription: Scale-down if CPU < 3% for 10 minutes
+      MetricName: CPUUtilization
+      Namespace: AWS/EC2
+      EvaluationPeriods: '2'
+      Statistic: Average
+      Threshold: '3'
+      Period: '300'
+      AlarmActions:
+        - Ref: WebServerScaleDownPolicy
+      Dimensions:
+        - Name: AutoScalingGroupName
+          Value:
+            Ref: EC2AutoScalingGroup
+      ComparisonOperator: LessThanThreshold
+    
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP via port 3000
+      GroupName: LoadBalancerSecurityGroup
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: 3000
+        ToPort: 3000
+        DestinationSecurityGroupId:
+          Fn::GetAtt: [ ApplicationSecurityGroup, GroupId ]
+      Tags:
+        - Key: Name
+          Value: LoadBalancerSecurityGroup
+  
+  WebAppLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    DependsOn: LoadBalancerSecurityGroup
+    Properties: 
+      LoadBalancerAttributes: 
+        - Key: idle_timeout.timeout_seconds
+          Value: 300
+      Name: WebAppLoadBalancer
+      Scheme: internet-facing
+      SecurityGroups: 
+        - !Ref LoadBalancerSecurityGroup
+      Subnets: 
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+
+  LoadBalancerTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: WebAppLoadBalancer
+    Properties:
+      Name: LoadBalancerTargetGroup
+      HealthCheckPath: /
+      Matcher:
+        HttpCode: "200,302,401,404,400"
+      HealthCheckIntervalSeconds: 60
+      HealthCheckTimeoutSeconds: 59
+      HealthyThresholdCount: 3
+      Port: 3000
+      Protocol: HTTP
+      UnhealthyThresholdCount: 5
+      VpcId: !Ref VPC
+
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+    - LoadBalancerTargetGroup
+    - WebAppLoadBalancer
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref LoadBalancerTargetGroup
+      LoadBalancerArn: !Ref WebAppLoadBalancer
+      Port: 80
+      Protocol: HTTP
 
   CodeDeployEC2Role:
     Type: AWS::IAM::Role
@@ -551,11 +710,15 @@ Resources:
   CodeDeploymentGroup: 
     Type: AWS::CodeDeploy::DeploymentGroup
     DependsOn: 
+      - CodeDeployApplication
       - CodeDeployServiceRole
-      - MyEC2Instance
+      - EC2AutoScalingGroup
+      - LoadBalancerTargetGroup
     Properties: 
       ApplicationName: !Ref CodeDeployApplication
       DeploymentGroupName: csye6225-webapp-deployment
+      AutoScalingGroups: 
+        - !Ref EC2AutoScalingGroup
       DeploymentStyle:
         DeploymentType: IN_PLACE
         DeploymentOption: WITHOUT_TRAFFIC_CONTROL
@@ -568,5 +731,20 @@ Resources:
         Enabled: true
         Events: 
           - DEPLOYMENT_FAILURE
+      LoadBalancerInfo:
+        TargetGroupInfoList:
+          - Name: !GetAtt LoadBalancerTargetGroup.TargetGroupName
       ServiceRoleArn: 
         Fn::GetAtt: [ CodeDeployServiceRole, Arn ]
+
+  DNSRecordSet:
+    Type: AWS::Route53::RecordSet
+    DependsOn: WebAppLoadBalancer
+    Properties:
+      AliasTarget:
+        DNSName: !GetAtt WebAppLoadBalancer.DNSName
+        HostedZoneId: !GetAtt WebAppLoadBalancer.CanonicalHostedZoneID
+        EvaluateTargetHealth: true
+      Name: !Join ['', [!Ref DomainName, "."]]
+      HostedZoneName: !Join ['', [!Ref DomainName, "."]]
+      Type: A
