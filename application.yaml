@@ -87,6 +87,11 @@ Parameters:
     Type: String
     Default: "us-east-1"
 
+  CodeDeployBucket:
+    Description: Please enter the bucket for code deploy
+    Type: String
+    Default: "codedeploy.srikanthreddygubballi.me"
+
   AccountID:
     Description: Please enter the account ID for permissions attach
     Type: String
@@ -443,13 +448,13 @@ Resources:
   CPUAlarmHigh:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Scale-up if CPU > 5% for 10 minutes
+      AlarmDescription: Scale-up if CPU > 20% for 1 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       EvaluationPeriods: '2'
       Statistic: Average
-      Threshold: '5'
-      Period: '300'
+      Threshold: '20'
+      Period: '60'
       AlarmActions:
         - Ref: WebServerScaleUpPolicy
       Dimensions:
@@ -469,13 +474,13 @@ Resources:
   CPUAlarmLow:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Scale-down if CPU < 3% for 10 minutes
+      AlarmDescription: Scale-down if CPU < 10% for 1 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       EvaluationPeriods: '2'
       Statistic: Average
-      Threshold: '3'
-      Period: '300'
+      Threshold: '10'
+      Period: '60'
       AlarmActions:
         - Ref: WebServerScaleDownPolicy
       Dimensions:
@@ -648,8 +653,8 @@ Resources:
               - s3:Get*
               - s3:List*
             Resource:
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me/*
+              - !Join ['', ['arn:aws:s3:::', !Ref CodeDeployBucket]]
+              - !Join ['', ['arn:aws:s3:::', !Ref CodeDeployBucket,'/*']]
       Users: 
         - circleci
       Roles:
@@ -668,8 +673,8 @@ Resources:
               - s3:List*
               - s3:PutObject
             Resource:
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me/*
+              - !Join ['', ['arn:aws:s3:::', !Ref CodeDeployBucket]]
+              - !Join ['', ['arn:aws:s3:::', !Ref CodeDeployBucket,'/*']]
       Users: 
         - circleci
 
