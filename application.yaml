@@ -87,6 +87,11 @@ Parameters:
     Type: String
     Default: "us-east-1"
 
+  CodeDeployBucket:
+    Description: Please enter the bucket for code deploy
+    Type: String
+    Default: "codedeploy.srikanthreddygubballi.me"
+
   AccountID:
     Description: Please enter the account ID for permissions attach
     Type: String
@@ -223,11 +228,11 @@ Resources:
       - IpProtocol: tcp
         FromPort: 80
         ToPort: 80
-        CidrIp: 0.0.0.0/0
+        SourceSecurityGroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
       - IpProtocol: tcp
         FromPort: 22
         ToPort: 22
-        CidrIp: 0.0.0.0/0
+        SourceSecurityGroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
       - IpProtocol: tcp
         FromPort: 443
         ToPort: 443
@@ -235,7 +240,7 @@ Resources:
       - IpProtocol: tcp
         FromPort: 3000
         ToPort: 3000
-        CidrIp: 0.0.0.0/0
+        SourceSecurityGroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
       Tags:
         - Key: Name
           Value: application
@@ -243,7 +248,6 @@ Resources:
 
   RDSSecurityGroup:
     Type: AWS::EC2::SecurityGroup
-    DependsOn: ApplicationSecurityGroup
     Properties:
       GroupDescription: Group for RDS
       GroupName: database
@@ -322,9 +326,6 @@ Resources:
 
   DBSubnetGroup:
     Type: "AWS::RDS::DBSubnetGroup"
-    DependsOn:
-    - PublicSubnet1
-    - PublicSubnet2
     Properties: 
       DBSubnetGroupDescription: Subnet group for RDS instance
       SubnetIds: 
@@ -336,7 +337,6 @@ Resources:
 
   MySQLDB:
     Type: AWS::RDS::DBInstance
-    DependsOn: RDSSecurityGroup
     Properties:
       DBInstanceIdentifier: csye6225-spring2020
       DBName: !Ref DBName
@@ -443,12 +443,12 @@ Resources:
   CPUAlarmHigh:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Scale-up if CPU > 5% for 10 minutes
+      AlarmDescription: Scale-up if CPU > 70% for 5 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       EvaluationPeriods: '2'
       Statistic: Average
-      Threshold: '5'
+      Threshold: '70'
       Period: '300'
       AlarmActions:
         - Ref: WebServerScaleUpPolicy
@@ -469,12 +469,12 @@ Resources:
   CPUAlarmLow:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmDescription: Scale-down if CPU < 3% for 10 minutes
+      AlarmDescription: Scale-down if CPU < 40% for 5 minutes
       MetricName: CPUUtilization
       Namespace: AWS/EC2
       EvaluationPeriods: '2'
       Statistic: Average
-      Threshold: '3'
+      Threshold: '40'
       Period: '300'
       AlarmActions:
         - Ref: WebServerScaleDownPolicy
@@ -499,19 +499,16 @@ Resources:
         FromPort: 443
         ToPort: 443
         CidrIp: 0.0.0.0/0
-      SecurityGroupEgress:
       - IpProtocol: tcp
         FromPort: 3000
         ToPort: 3000
-        DestinationSecurityGroupId:
-          Fn::GetAtt: [ ApplicationSecurityGroup, GroupId ]
+        CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
           Value: LoadBalancerSecurityGroup
   
   WebAppLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    DependsOn: LoadBalancerSecurityGroup
     Properties: 
       LoadBalancerAttributes: 
         - Key: idle_timeout.timeout_seconds
@@ -542,9 +539,6 @@ Resources:
 
   LoadBalancerListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
-    DependsOn:
-    - LoadBalancerTargetGroup
-    - WebAppLoadBalancer
     Properties:
       DefaultActions:
         - Type: forward
@@ -648,8 +642,8 @@ Resources:
               - s3:Get*
               - s3:List*
             Resource:
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me/*
+              - !Join ['', ['arn:aws:s3:::', !Ref CodeDeployBucket]]
+              - !Join ['', ['arn:aws:s3:::', !Ref CodeDeployBucket,'/*']]
       Users: 
         - circleci
       Roles:
@@ -668,8 +662,8 @@ Resources:
               - s3:List*
               - s3:PutObject
             Resource:
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me
-              - arn:aws:s3:::codedeploy.srikanthreddygubballi.me/*
+              - !Join ['', ['arn:aws:s3:::', !Ref CodeDeployBucket]]
+              - !Join ['', ['arn:aws:s3:::', !Ref CodeDeployBucket,'/*']]
       Users: 
         - circleci
 
@@ -711,7 +705,6 @@ Resources:
     Type: AWS::CodeDeploy::DeploymentGroup
     DependsOn: 
       - CodeDeployApplication
-      - CodeDeployServiceRole
       - EC2AutoScalingGroup
       - LoadBalancerTargetGroup
     Properties: 

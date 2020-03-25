@@ -65,6 +65,10 @@
     "ParameterValue": "us-east-1"
   },
   {
+    "ParameterKey": "CodeDeployBucket",
+    "ParameterValue": "codedeploy.srikanthreddygubballi.me"
+  },
+  {
     "ParameterKey": "AccountID",
     "ParameterValue": "823301983257"
   },
