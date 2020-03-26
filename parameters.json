@@ -66,11 +66,11 @@
   },
   {
     "ParameterKey": "CodeDeployBucket",
-    "ParameterValue": "codedeploy.srikanthreddygubballi.me"
+    "ParameterValue": "codedeploy.prod.srikanthreddygubballi.me"
   },
   {
     "ParameterKey": "AccountID",
-    "ParameterValue": "823301983257"
+    "ParameterValue": "748596750012"
   },
   {
     "ParameterKey": "AsgLaunchConfig",
@@ -90,7 +90,7 @@
   },
   {
     "ParameterKey": "DomainName",
-    "ParameterValue": "dev.srikanthreddygubballi.me"
+    "ParameterValue": "prod.srikanthreddygubballi.me"
   }
 
 ]
