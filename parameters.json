@@ -66,11 +66,11 @@
   },
   {
     "ParameterKey": "CodeDeployBucket",
-    "ParameterValue": "codedeploy.prod.srikanthreddygubballi.me"
+    "ParameterValue": "codedeploy.srikanthreddygubballi.me"
   },
   {
     "ParameterKey": "AccountID",
-    "ParameterValue": "748596750012"
+    "ParameterValue": "823301983257"
   },
   {
     "ParameterKey": "AsgLaunchConfig",
@@ -90,7 +90,19 @@
   },
   {
     "ParameterKey": "DomainName",
-    "ParameterValue": "prod.srikanthreddygubballi.me"
+    "ParameterValue": "dev.srikanthreddygubballi.me"
+  },
+  {
+    "ParameterKey": "SQSQueueName",
+    "ParameterValue": "csye6225-sqs"
+  },
+  {
+    "ParameterKey": "SNSTopicName",
+    "ParameterValue": "csye6225-sns"
+  },
+  {
+    "ParameterKey": "LambdaBucket",
+    "ParameterValue": "dev-lambdabucket"
   }
 
 ]

@@ -122,6 +122,21 @@ Parameters:
     Type: String
     Default: "dev.srikanthreddygubballi.me"
 
+  SQSQueueName:
+    Description: Please enter the name for sqs queue
+    Type: String
+    Default: "csye6225-sqs"
+  
+  SNSTopicName:
+    Description: Please enter the name for sns topic
+    Type: String
+    Default: "csye6225-sns"
+
+  LambdaBucket:
+    Description: Please enter the bucket name for lambda function
+    Type: String
+    Default: "dev-lambdabucket"
+
 Resources:
   VPC:
     Type: AWS::EC2::VPC
@@ -300,6 +315,8 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
         - arn:aws:iam::aws:policy/CloudWatchAgentAdminPolicy
+        - arn:aws:iam::aws:policy/AmazonSQSFullAccess
+        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
       RoleName: EC2-CSYE6225
       
   EC2IAMPolicy:
@@ -410,6 +427,15 @@ Resources:
               - "\"\n' >> .env"
               - "echo $'AWS_PROFILE = \"aws-dev\"\n'>> .env"
               - "echo $'AWS_DEFAULT_ACL= = \"private\"\n'>> .env"
+              - "echo $'ACCOUNT_ID = \""
+              - !Sub ${AccountID}
+              - "\"\n' >> .env"
+              - "echo $'SQS_QUEUE_NAME = \""
+              - !Sub ${SQSQueueName}
+              - "\"\n' >> .env"
+              - "echo $'SNS_TOPIC_NAME = \""
+              - !Sub ${SNSTopicName}
+              - "\"\n' >> .env"
 
   EC2AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -741,3 +767,121 @@ Resources:
       Name: !Join ['', [!Ref DomainName, "."]]
       HostedZoneName: !Join ['', [!Ref DomainName, "."]]
       Type: A
+
+  SQSQueue:
+    Type: AWS::SQS::Queue
+    Properties: 
+      QueueName: !Ref SQSQueueName
+      MessageRetentionPeriod: 300
+
+  lambdaExecutionPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: LambdaExecutionPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: logs:CreateLogGroup
+            Resource: arn:aws:logs:us-east-1:*
+          - Effect: Allow
+            Action: 
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: arn:aws:logs:us-east-1:*:log-group:/aws/lambda/myLambda:*
+
+  lambdaIAMRole:
+    Type: AWS::IAM::Role
+    DependsOn: lambdaExecutionPolicy
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - !Ref lambdaExecutionPolicy
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/AmazonSESFullAccess
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaDynamoDBExecutionRole
+        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess
+        - arn:aws:iam::aws:policy/AmazonRoute53FullAccess
+      RoleName: lambdaIAMRole
+
+  snsIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: snsIAMRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ssm.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: snsFullAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 'sns:*'
+                Resource: '*'
+ 
+  DynamoDBTable: 
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      TableName: csye6225-dynamo
+      AttributeDefinitions: 
+        - 
+          AttributeName: "email_address"
+          AttributeType: "S"
+      KeySchema: 
+        - 
+          AttributeName: "email_address"
+          KeyType: "HASH"
+      ProvisionedThroughput: 
+        ReadCapacityUnits: 2
+        WriteCapacityUnits: 2
+      TimeToLiveSpecification:
+        AttributeName: "email_address"
+        Enabled: true       
+
+  myLambda:
+    Type: AWS::Lambda::Function
+    DependsOn: lambdaIAMRole
+    Properties: 
+      FunctionName: myLambda
+      Handler: index.handler
+      Role: !GetAtt lambdaIAMRole.Arn
+      Code: 
+        ZipFile: |
+          console.log("Initial setup code for Lambda")
+      Runtime: nodejs12.x
+      Timeout: 30
+
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    DependsOn: myLambda
+    Properties: 
+      TopicName: !Ref SNSTopicName
+      Subscription:
+        - Endpoint: !GetAtt myLambda.Arn
+          Protocol: lambda
+
+  LambdaResourcePolicy:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref myLambda
+      Principal: sns.amazonaws.com
+      Action: lambda:InvokeFunction
+      SourceArn: !Ref SNSTopic
