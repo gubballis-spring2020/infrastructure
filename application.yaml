@@ -249,10 +249,6 @@ Resources:
         ToPort: 22
         SourceSecurityGroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
       - IpProtocol: tcp
-        FromPort: 443
-        ToPort: 443
-        CidrIp: 0.0.0.0/0
-      - IpProtocol: tcp
         FromPort: 3000
         ToPort: 3000
         SourceSecurityGroupId: !GetAtt LoadBalancerSecurityGroup.GroupId
@@ -351,11 +347,20 @@ Resources:
       Tags: 
         - Key: Name
           Value: DBSubnetGroup     
+ 
+  RDSDBParameterGroup: 
+    Properties: 
+      Description: Enable performance_schema for MySQL
+      Family: mysql5.6
+      Parameters: 
+        performance_schema: 1
+    Type: "AWS::RDS::DBParameterGroup"
 
   MySQLDB:
     Type: AWS::RDS::DBInstance
     Properties:
       DBInstanceIdentifier: csye6225-spring2020
+      DBParameterGroupName: !Ref RDSDBParameterGroup
       DBName: !Ref DBName
       PubliclyAccessible: !Ref PubliclyAccessibleRDS
       DBInstanceClass: !Ref DBInstanceClass
@@ -368,6 +373,7 @@ Resources:
       DBSubnetGroupName: !Ref DBSubnetGroup
       VPCSecurityGroups:
         - !Ref RDSSecurityGroup
+      StorageEncrypted: true
 
   EC2RoleAttach:
     Type: AWS::IAM::InstanceProfile
@@ -570,8 +576,10 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref LoadBalancerTargetGroup
       LoadBalancerArn: !Ref WebAppLoadBalancer
-      Port: 80
-      Protocol: HTTP
+      Certificates:
+        - CertificateArn: arn:aws:acm:us-east-1:748596750012:certificate/9196a5d6-e614-4e05-9a30-22e9f7b5b7d7
+      Port: 443
+      Protocol: HTTPS
 
   CodeDeployEC2Role:
     Type: AWS::IAM::Role
