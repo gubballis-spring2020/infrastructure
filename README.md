@@ -27,4 +27,8 @@ And can also be run using the below command on the command line
     --profile profile_name 
     ```
 
+A certificate has to be uploaded inorder for HTTPS connection and command is as follows:
+```
+aws acm import-certificate --certificate file://{certificat}.crt --private-key file://{your-privatekey}.pem --certificate-chain file://{ca-bundle-name}.ca-bundle --profile {profile-name}
+```
     
